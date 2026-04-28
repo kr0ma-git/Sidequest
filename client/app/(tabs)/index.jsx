@@ -9,6 +9,7 @@ import {
   FlatList,
   ScrollView,
 } from "react-native";
+import MapView, { Marker, Callout } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
 
@@ -186,6 +187,7 @@ export default function JobFeed() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [viewMode, setViewMode] = useState("list");
 
   const filtered = MOCK_JOBS.filter((job) => {
     const matchCat =
@@ -446,4 +448,15 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.xs,
         color: Colors.textMuted,
     },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  toggleBtn: {
+    backgroundColor: Colors.surfaceRaised, paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
+  },
+  toggleBtnText: { fontSize: 14, fontWeight: "700", color: Colors.textSecondary },
+  map: { flex: 1 },
+  callout: { width: 200, padding: 8 },
+  calloutTitle: { fontSize: 13, fontWeight: "700", color: "#111", marginBottom: 2 },
+  calloutPay: { fontSize: 13, fontWeight: "900", color: "#C47D0E" },
+  calloutBtn: { marginTop: 4, fontSize: 12, fontWeight: "700", color: "#F5A623", textDecorationLine: "underline" },
 });
