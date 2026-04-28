@@ -200,61 +200,68 @@ export default function JobFeed() {
     return matchCat && matchSearch;
   });
 
-  const Header = (
+
+  return (
+  <SafeAreaView style={styles.safe}>
     <View style={styles.headerBg}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Find a Quest</Text>
-        <TouchableOpacity
-          style={styles.postBtn}
-          onPress={() => router.push("/job/create")}
-        >
-          <Text style={styles.postText}>+ Post</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.toggleBtn}
+            onPress={() => setViewMode(viewMode === "list" ? "map" : "list")}
+          >
+            <Text style={styles.toggleBtnText}>
+              {viewMode === "list" ? "MAP" : "LIST"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.postBtn} onPress={() => router.push("/job/create")}>
+            <Text style={styles.postText}>+ Post</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {/* Search */}
       <SearchBar value={search} onChangeText={setSearch} />
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
         {CATEGORIES.map((cat) => (
-          <CategoryPill
-            key={cat.id}
-            label={cat.label}
-            active={activeCategory === cat.id}
-            onPress={() => setActiveCategory(cat.id)}
-          />
+          <CategoryPill key={cat.id} label={cat.label} active={activeCategory === cat.id}
+            onPress={() => setActiveCategory(cat.id)} />
         ))}
       </ScrollView>
-
       <Text style={styles.results}>
         {filtered.length} quest{filtered.length !== 1 ? "s" : ""} found
       </Text>
     </View>
-  );
 
-  return (
-    <SafeAreaView style={styles.safe}>
+    {viewMode === "list" ? (
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <JobCard
-            job={item}
-            onPress={() => router.push(`../job/${item.id}`)}
-          />
+          <JobCard job={item} onPress={() => router.push("../job/" + item.id)} />
         )}
-        ListHeaderComponent={Header}
-        stickyHeaderIndices={[0]}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
-  );
+    ) : (
+      <MapView
+        style={styles.map}
+        initialRegion={{ latitude: 10.3310, longitude: 123.9137, latitudeDelta: 0.12, longitudeDelta: 0.12 }}
+      >
+        {filtered.map((job) => (
+          <Marker key={job.id} coordinate={job.coords} pinColor="#F5A623">
+            <Callout onPress={() => router.push("../job/" + job.id)}>
+              <View style={styles.callout}>
+                <Text style={styles.calloutTitle}>{job.title}</Text>
+                <Text style={styles.calloutPay}>P{job.pay}</Text>
+                <Text style={styles.calloutBtn}>View Quest</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+      </MapView>
+    )}
+  </SafeAreaView>
+);
 }
 
 const styles = StyleSheet.create({
