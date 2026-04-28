@@ -236,7 +236,7 @@ export default function JobFeed() {
           data={filtered}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <JobCard job={item} onPress={() => router.push("../job/" + item.id)} />
+            <JobCard job={item} onPress={() => router.push(`../job/${item.id}`)} />
           )}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
@@ -248,7 +248,7 @@ export default function JobFeed() {
         >
           {filtered.map((job) => (
             <Marker key={job.id} coordinate={job.coords} pinColor="#F5A623">
-              <Callout onPress={() => router.push("../job/" + job.id)}>
+              <Callout onPress={() => router.push(`../job/${job.id}`)}>
                 <View style={styles.callout}>
                   <Text style={styles.calloutTitle}>{job.title}</Text>
                   <Text style={styles.calloutPay}>₱{job.pay}</Text>
@@ -463,6 +463,6 @@ const styles = StyleSheet.create({
     map: { flex: 1 },
     callout: { width: 200, padding: 8 },
     calloutTitle: { fontSize: 13, fontWeight: "700", color: "#111", marginBottom: 2 },
-    calloutPay: { fontSize: 13, fontWeight: "900", color: "#C47D0E" },
-    calloutBtn: { marginTop: 4, fontSize: 12, fontWeight: "700", color: "#F5A623", textDecorationLine: "underline" },
+    calloutPay: { fontSize: 13, fontWeight: "900", color: Colors.accentDim },
+    calloutBtn: { marginTop: 4, fontSize: 12, fontWeight: "700", color: Colors.accent, textDecorationLine: "underline" },
 });
