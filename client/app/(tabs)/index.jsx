@@ -156,11 +156,11 @@ function JobCard({ job, onPress }) {
           <Text style={styles.payLabel}>cash</Text>
         </View>
       </View>
- 
+
       <Text style={styles.cardDesc} numberOfLines={2}>
         {job.description}
       </Text>
- 
+
       <View style={styles.cardFooter}>
         <View style={styles.metaItem}>
           <Text style={styles.metaIcon}>📍</Text>
@@ -171,7 +171,7 @@ function JobCard({ job, onPress }) {
           <Text style={styles.metaText}>Expires in {job.expiresIn}</Text>
         </View>
       </View>
- 
+
       <View style={styles.posterRow}>
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarText}>{job.postedBy[0]}</Text>
@@ -230,7 +230,7 @@ export default function JobFeed() {
           {filtered.length} quest{filtered.length !== 1 ? "s" : ""} found
         </Text>
       </View>
-  
+
       {viewMode === "list" ? (
         <FlatList
           data={filtered}
