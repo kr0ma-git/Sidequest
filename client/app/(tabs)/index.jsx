@@ -11,8 +11,68 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
-import MapView, { Marker, Callout } from "react-native-maps";
+import { WebView } from "react-native-webview";
 
+
+function buildMapHTML(jobs) {
+  var data = jobs.map(function(j) {
+    return { id: j.id, title: j.title, pay: j.pay, lat: j.coords.latitude, lng: j.coords.longitude };
+  });
+  var jj = JSON.stringify(data);
+  var h = "<!DOCTYPE html><html><head>";
+  h += "<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">";
+  h += "<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />";
+  h += "<scr"+"ipt src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></scr"+"ipt>";
+  h += "<style>*{margin:0;padding:0;box-sizing:border-box}#map{width:100vw;height:100vh}";
+  h += ".pt{font-weight:700;font-size:13px;margin-bottom:2px}";
+  h += ".pp{font-weight:900;font-size:13px;color:#C47D0E;margin-bottom:6px}";
+  h += ".pb{background:#F5A623;border:none;padding:6px 0;border-radius:6px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;width:100%}";
+  h += "</style></head><body><div id="map"></div><scr"+"ipt>";
+  h += "document.addEventListener("click",function(e){if(e.target.dataset.jid)window.ReactNativeWebView.postMessage(e.target.dataset.jid);});";
+  h += "var map=L.map("map").setView([10.3310,123.9137],13);";
+  h += "L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM",maxZoom:19}).addTo(map);";
+  h += "var icon=L.divIcon({html:"<div style=\"background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)\"></div>",iconSize:[18,18],iconAnchor:[9,9],className:""});";
+  h += "var jobs="+jj+";";
+  h += "jobs.forEach(function(j){";
+  h += "var pop=L.popup({minWidth:160}).setContent(";
+  h += ""<div class=\"pt\">"+j.title+"</div>"";
+  h += "+"<div class=\"pp\">₱"+j.pay+"</div>"";
+  h += "+"<button class=\"pb\" data-jid=\""+j.id+"\">View Quest</button>"";
+  h += ");";
+  h += "L.marker([j.lat,j.lng],{icon:icon}).addTo(map).bindPopup(pop);});";
+  h += "</scr"+"ipt></body></html>";
+  return h;
+}
+
+function buildMapHTML(jobs) {
+  var jj = JSON.stringify(jobs.map(function(j) {
+    return { id: j.id, title: j.title, pay: j.pay, lat: j.coords.latitude, lng: j.coords.longitude };
+  }));
+  var p = [];
+  p.push('<!DOCTYPE html><html><head>');
+  p.push('<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">');
+  p.push('<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>');
+  p.push('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>');
+  p.push('<style>*{margin:0;padding:0;box-sizing:border-box}#map{width:100vw;height:100vh}');
+  p.push('.pt{font-weight:700;font-size:13px;margin-bottom:2px}');
+  p.push('.pp{font-weight:900;font-size:13px;color:#C47D0E;margin-bottom:6px}');
+  p.push('.pb{background:#F5A623;border:none;padding:6px 0;border-radius:6px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;width:100%}');
+  p.push('</style></head><body><div id="map"></div>');
+  p.push('<script>');
+  p.push('document.addEventListener("click",function(e){if(e.target.dataset.jid)window.ReactNativeWebView.postMessage(e.target.dataset.jid);});');
+  p.push('var map=L.map("map").setView([10.3310,123.9137],13);');
+  p.push('L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM",maxZoom:19}).addTo(map);');
+  p.push('var icon=L.divIcon({html:"<div style=\"background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)\"></div>",iconSize:[18,18],iconAnchor:[9,9],className:""});');
+  p.push('var jobs='+jj+';');
+  p.push('jobs.forEach(function(j){');
+  p.push('  var html=',
+    '    "<div class=\"pt\">" + j.title + "</div>"',
+    '    + "<div class=\"pp\">₱" + j.pay + "</div>"',
+    '    + "<button class=\"pb\" data-jid=\"" + j.id + "\">View Quest</button>";');
+  p.push('  L.marker([j.lat,j.lng],{icon:icon}).addTo(map).bindPopup(L.popup({minWidth:160}).setContent(html));});');
+  p.push('</script></body></html>');
+  return p.join('');
+}
 const CATEGORIES = [
   { id: "all", label: "All" },
   { id: "delivery", label: "🛵 Delivery" },
@@ -242,22 +302,11 @@ export default function JobFeed() {
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <MapView
+        <WebView
           style={styles.map}
-          initialRegion={{ latitude: 10.3310, longitude: 123.9137, latitudeDelta: 0.12, longitudeDelta: 0.12 }}
-        >
-          {filtered.map((job) => (
-            <Marker key={job.id} coordinate={job.coords} pinColor="#F5A623">
-              <Callout onPress={() => router.push(`../job/${job.id}`)}>
-                <View style={styles.callout}>
-                  <Text style={styles.calloutTitle}>{job.title}</Text>
-                  <Text style={styles.calloutPay}>₱{job.pay}</Text>
-                  <Text style={styles.calloutBtn}>View Quest</Text>
-                </View>
-              </Callout>
-            </Marker>
-          ))}
-        </MapView>
+          source={{ html: buildMapHTML(filtered) }}
+          onMessage={(e) => router.push("../job/" + e.nativeEvent.data)}
+        />
       )}
     </SafeAreaView>
   );
