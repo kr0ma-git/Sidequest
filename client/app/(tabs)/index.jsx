@@ -13,66 +13,74 @@ import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
 import { WebView } from "react-native-webview";
 
-
+// FIXED: Replaced duplicate string-concatenation functions with a single, clean Template Literal.
 function buildMapHTML(jobs) {
-  var data = jobs.map(function(j) {
-    return { id: j.id, title: j.title, pay: j.pay, lat: j.coords.latitude, lng: j.coords.longitude };
-  });
-  var jj = JSON.stringify(data);
-  var h = "<!DOCTYPE html><html><head>";
-  h += "<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">";
-  h += "<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />";
-  h += "<scr"+"ipt src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></scr"+"ipt>";
-  h += "<style>*{margin:0;padding:0;box-sizing:border-box}#map{width:100vw;height:100vh}";
-  h += ".pt{font-weight:700;font-size:13px;margin-bottom:2px}";
-  h += ".pp{font-weight:900;font-size:13px;color:#C47D0E;margin-bottom:6px}";
-  h += ".pb{background:#F5A623;border:none;padding:6px 0;border-radius:6px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;width:100%}";
-  h += "</style></head><body><div id="map"></div><scr"+"ipt>";
-  h += "document.addEventListener("click",function(e){if(e.target.dataset.jid)window.ReactNativeWebView.postMessage(e.target.dataset.jid);});";
-  h += "var map=L.map("map").setView([10.3310,123.9137],13);";
-  h += "L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM",maxZoom:19}).addTo(map);";
-  h += "var icon=L.divIcon({html:"<div style=\"background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)\"></div>",iconSize:[18,18],iconAnchor:[9,9],className:""});";
-  h += "var jobs="+jj+";";
-  h += "jobs.forEach(function(j){";
-  h += "var pop=L.popup({minWidth:160}).setContent(";
-  h += ""<div class=\"pt\">"+j.title+"</div>"";
-  h += "+"<div class=\"pp\">₱"+j.pay+"</div>"";
-  h += "+"<button class=\"pb\" data-jid=\""+j.id+"\">View Quest</button>"";
-  h += ");";
-  h += "L.marker([j.lat,j.lng],{icon:icon}).addTo(map).bindPopup(pop);});";
-  h += "</scr"+"ipt></body></html>";
-  return h;
-}
-
-function buildMapHTML(jobs) {
-  var jj = JSON.stringify(jobs.map(function(j) {
-    return { id: j.id, title: j.title, pay: j.pay, lat: j.coords.latitude, lng: j.coords.longitude };
+  const data = jobs.map((j) => ({
+    id: j.id,
+    title: j.title,
+    pay: j.pay,
+    lat: j.coords.latitude,
+    lng: j.coords.longitude,
   }));
-  var p = [];
-  p.push('<!DOCTYPE html><html><head>');
-  p.push('<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">');
-  p.push('<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>');
-  p.push('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>');
-  p.push('<style>*{margin:0;padding:0;box-sizing:border-box}#map{width:100vw;height:100vh}');
-  p.push('.pt{font-weight:700;font-size:13px;margin-bottom:2px}');
-  p.push('.pp{font-weight:900;font-size:13px;color:#C47D0E;margin-bottom:6px}');
-  p.push('.pb{background:#F5A623;border:none;padding:6px 0;border-radius:6px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;width:100%}');
-  p.push('</style></head><body><div id="map"></div>');
-  p.push('<script>');
-  p.push('document.addEventListener("click",function(e){if(e.target.dataset.jid)window.ReactNativeWebView.postMessage(e.target.dataset.jid);});');
-  p.push('var map=L.map("map").setView([10.3310,123.9137],13);');
-  p.push('L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM",maxZoom:19}).addTo(map);');
-  p.push('var icon=L.divIcon({html:"<div style=\"background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)\"></div>",iconSize:[18,18],iconAnchor:[9,9],className:""});');
-  p.push('var jobs='+jj+';');
-  p.push('jobs.forEach(function(j){');
-  p.push('  var html=',
-    '    "<div class=\"pt\">" + j.title + "</div>"',
-    '    + "<div class=\"pp\">₱" + j.pay + "</div>"',
-    '    + "<button class=\"pb\" data-jid=\"" + j.id + "\">View Quest</button>";');
-  p.push('  L.marker([j.lat,j.lng],{icon:icon}).addTo(map).bindPopup(L.popup({minWidth:160}).setContent(html));});');
-  p.push('</script></body></html>');
-  return p.join('');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    #map { width: 100vw; height: 100vh; }
+    .pt { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+    .pp { font-weight: 900; font-size: 13px; color: #C47D0E; margin-bottom: 6px; }
+    .pb { background: #F5A623; border: none; padding: 6px 0; border-radius: 6px; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    // Event delegation for the "View Quest" buttons
+    document.addEventListener("click", function(e) {
+      if(e.target.dataset.jid) {
+        window.ReactNativeWebView.postMessage(e.target.dataset.jid);
+      }
+    });
+
+    // Initialize Map
+    var map = L.map("map").setView([10.3310, 123.9137], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OSM",
+      maxZoom: 19
+    }).addTo(map);
+
+    // Custom Icon
+    var icon = L.divIcon({
+      html: '<div style="background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+      className: ""
+    });
+
+    // Inject data from React Native
+    var jobs = ${JSON.stringify(data)};
+
+    // Plot Markers
+    jobs.forEach(function(j) {
+      var popupHtml = '<div class="pt">' + j.title + '</div>' +
+                      '<div class="pp">₱' + j.pay + '</div>' +
+                      '<button class="pb" data-jid="' + j.id + '">View Quest</button>';
+                      
+      var pop = L.popup({ minWidth: 160 }).setContent(popupHtml);
+      L.marker([j.lat, j.lng], { icon: icon }).addTo(map).bindPopup(pop);
+    });
+  </script>
+</body>
+</html>
+  `;
 }
+
 const CATEGORIES = [
   { id: "all", label: "All" },
   { id: "delivery", label: "🛵 Delivery" },
