@@ -8,35 +8,42 @@ import {
   KeyboardAvoidingView,
   Platform
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, Redirect } from "expo-router";
 import { AuthInput } from "../components/AuthInput";
 import { AuthButton } from "../components/AuthButton";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
+import { supabase } from "../config/supabaseConnection.js";
+import { FontAwesome } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
+import { useSession } from "../lib/SessionContext.jsx";
+import SplashScreen from "../components/SplashScreen.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NOTE: Auth is session-based via Supabase.
 // Supabase manages tokens internally — no manual JWT handling needed.
-// If you ever need to forward a token to Django:
-//   const { data } = await supabase.auth.getSession();
-//   const token = data.session.access_token;
-//
-// When ready, create lib/supabase.js and import it here:
-//   import { supabase } from "../../lib/supabase";
+// Need to fix the Login after not redirecting to (tabs)
 // ─────────────────────────────────────────────────────────────────────────────
+
+WebBrowser.maybeCompleteAuthSession();
 
 function EyeIcon({ visible }) {
   return (
-    <Text style={{ color: Colors.textMuted, fontSize: 16 }}>
-      {visible ? "🙈" : "👁"}
-    </Text>
+    <FontAwesome
+      name={visible ? "eye-slash" : "eye"}
+      size={16}
+      color={Colors.textSecondary}
+    />
   );
 }
 
 function GoogleIcon() {
   return (
-    <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.textPrimary }}>
-      G
-    </Text>
+    <FontAwesome
+      name="google"
+      size={16}
+      color={Colors.textPrimary}
+    />
   );
 }
 
@@ -62,9 +69,8 @@ function LoginForm() {
     setLoading(true);
     try {
       // TODO: Uncomment when Supabase is set up
-      // const { error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) throw error;
-      // router.replace("/(tabs)");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
       await new Promise((r) => setTimeout(r, 1200));
       router.replace("/(tabs)");
@@ -78,6 +84,26 @@ function LoginForm() {
   async function handleGoogleLogin() {
     // TODO: Uncomment when Supabase is set up
     // await supabase.auth.signInWithOAuth({ provider: "google" });
+    const redirectTo = AuthSession.makeRedirectUri({
+      scheme: "com.sidequest",
+    });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error) {
+      console.log("Supabase OAuth Error: ", error.message);
+      return;
+    }
+
+    if (data?.url) {
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    }
   }
 
   return (
@@ -159,13 +185,12 @@ function RegisterForm() {
     setLoading(true);
     try {
       // TODO: Uncomment when Supabase is set up
-      // const { error } = await supabase.auth.signUp({
-      //   email,
-      //   password,
-      //   options: { data: { full_name: fullName } },
-      // });
-      // if (error) throw error;
-      // router.replace("/(tabs)");
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName } },
+      });
+      if (error) throw error;
 
       await new Promise((r) => setTimeout(r, 1200));
       router.replace("/(tabs)");
@@ -178,7 +203,7 @@ function RegisterForm() {
 
   async function handleGoogleSignup() {
     // TODO: Uncomment when Supabase is set up
-    // await supabase.auth.signInWithOAuth({ provider: "google" });
+    await supabase.auth.signInWithOAuth({ provider: "google" });
   }
 
   return (
