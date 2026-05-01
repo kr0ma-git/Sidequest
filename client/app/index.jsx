@@ -1,21 +1,10 @@
 import { Redirect } from "expo-router";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { useSession } from "./lib/SessionContext.jsx";
-import { Colors, FontSizes, Spacing } from "./constants/theme.js";
-import SplashScreen from "./components/SplashScreen.jsx";
  
-// This is the only file responsible for deciding where the user goes on app open.
-// - Still loading session  → show splash screen
-// - Session found          → go to job feed
-// - No session             → go to login/register
+// This just picks the starting route.
+// The actual session checks live in (auth)/_layout.jsx and (tabs)/_layout.jsx —
+// they redirect appropriately when the session appears or disappears.
+// Default to auth; if the user has a session, (auth)/_layout will redirect to tabs.
  
 export default function Index() {
-  const { session, loading } = useSession();
- 
-  if (loading) return <SplashScreen />;
-  if (session) return <Redirect href="/(tabs)" />;
   return <Redirect href="/(auth)" />;
-
-  // Uncomment for debugging the SplashScreen
-  // return <SplashScreen />
 }
