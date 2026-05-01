@@ -127,6 +127,7 @@ function LoginForm() {
         error={errors.password}
         rightIcon={<EyeIcon visible={showPassword} />}
         onRightIconPress={() => setShowPassword((s) => !s)}
+        autoCapitalize="none"
       />
 
       <TouchableOpacity style={styles.forgotWrap}>

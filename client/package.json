@@ -11,7 +11,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@supabase/supabase-js": "^2.105.1",
-    "expo": "^55.0.17",
+    "expo": "~55.0.0",
     "expo-auth-session": "~55.0.15",
     "expo-constants": "~55.0.15",
     "expo-linking": "~55.0.14",
@@ -26,5 +26,8 @@
     "react-native-screens": "~4.23.0",
     "react-native-webview": "^13.16.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "babel-preset-expo": "~55.0.8"
+  }
 }

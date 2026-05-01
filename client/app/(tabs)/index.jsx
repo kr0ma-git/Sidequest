@@ -269,7 +269,7 @@ export default function JobFeed() {
   });
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <View style={styles.headerBg}>
         <View style={styles.header}>
           <Text style={styles.title}>Find a Quest</Text>
@@ -316,7 +316,7 @@ export default function JobFeed() {
           onMessage={(e) => router.push("../job/" + e.nativeEvent.data)}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
