@@ -11,6 +11,75 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
+import { WebView } from "react-native-webview";
+
+// FIXED: Replaced duplicate string-concatenation functions with a single, clean Template Literal.
+function buildMapHTML(jobs) {
+  const data = jobs.map((j) => ({
+    id: j.id,
+    title: j.title,
+    pay: j.pay,
+    lat: j.coords.latitude,
+    lng: j.coords.longitude,
+  }));
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    #map { width: 100vw; height: 100vh; }
+    .pt { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+    .pp { font-weight: 900; font-size: 13px; color: #C47D0E; margin-bottom: 6px; }
+    .pb { background: #F5A623; border: none; padding: 6px 0; border-radius: 6px; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    // Event delegation for the "View Quest" buttons
+    document.addEventListener("click", function(e) {
+      if(e.target.dataset.jid) {
+        window.ReactNativeWebView.postMessage(e.target.dataset.jid);
+      }
+    });
+
+    // Initialize Map
+    var map = L.map("map").setView([10.3310, 123.9137], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OSM",
+      maxZoom: 19
+    }).addTo(map);
+
+    // Custom Icon
+    var icon = L.divIcon({
+      html: '<div style="background:#F5A623;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+      className: ""
+    });
+
+    // Inject data from React Native
+    var jobs = ${JSON.stringify(data)};
+
+    // Plot Markers
+    jobs.forEach(function(j) {
+      var popupHtml = '<div class="pt">' + j.title + '</div>' +
+                      '<div class="pp">₱' + j.pay + '</div>' +
+                      '<button class="pb" data-jid="' + j.id + '">View Quest</button>';
+                      
+      var pop = L.popup({ minWidth: 160 }).setContent(popupHtml);
+      L.marker([j.lat, j.lng], { icon: icon }).addTo(map).bindPopup(pop);
+    });
+  </script>
+</body>
+</html>
+  `;
+}
 
 const CATEGORIES = [
   { id: "all", label: "All" },
@@ -30,6 +99,7 @@ const MOCK_JOBS = [
     category: "delivery",
     pay: 150,
     location: "Lahug, Cebu City",
+    coords: { latitude: 10.3310, longitude: 123.9137 },
     description: "Need someone to pick up groceries from SM Cebu and deliver to my condo. Items are already listed and paid for via GCash.",
     postedBy: "Maria S.",
     postedAt: "2h ago",
@@ -42,6 +112,7 @@ const MOCK_JOBS = [
     category: "repair",
     pay: 300,
     location: "Banilad, Cebu City",
+    coords: { latitude: 10.3500, longitude: 123.9050 },
     description: "Kitchen faucet has been dripping for a week. Need someone with basic plumbing experience. Tools preferred but not required.",
     postedBy: "Jun R.",
     postedAt: "30m ago",
@@ -54,6 +125,7 @@ const MOCK_JOBS = [
     category: "moving",
     pay: 500,
     location: "IT Park, Cebu City",
+    coords: { latitude: 10.3310, longitude: 123.9053 },
     description: "Moving a sofa, dining table, and 2 cabinets from ground floor to second floor. Need 2 strong helpers for about 2 hours.",
     postedBy: "Carla M.",
     postedAt: "5h ago",
@@ -66,6 +138,7 @@ const MOCK_JOBS = [
     category: "tutoring",
     pay: 250,
     location: "Talamban, Cebu City",
+    coords: { latitude: 10.3600, longitude: 123.9200 },
     description: "My daughter needs help with Algebra and Geometry. 2-hour session this Saturday afternoon. Must be patient and explain clearly.",
     postedBy: "Lito D.",
     postedAt: "1h ago",
@@ -78,6 +151,7 @@ const MOCK_JOBS = [
     category: "cleaning",
     pay: 400,
     location: "Mabolo, Cebu City",
+    coords: { latitude: 10.3230, longitude: 123.9180 },
     description: "Studio apartment needs thorough cleaning — floors, bathroom, kitchen. Around 3 hours of work. Cleaning supplies provided.",
     postedBy: "Ana T.",
     postedAt: "3h ago",
@@ -90,6 +164,7 @@ const MOCK_JOBS = [
     category: "errands",
     pay: 120,
     location: "Downtown, Cebu City",
+    coords: { latitude: 10.2939, longitude: 123.9020 },
     description: "Need someone to queue and pick up barangay clearance and cedula from City Hall. Will provide authorization letter.",
     postedBy: "Renz P.",
     postedAt: "4h ago",
@@ -149,11 +224,11 @@ function JobCard({ job, onPress }) {
           <Text style={styles.payLabel}>cash</Text>
         </View>
       </View>
- 
+
       <Text style={styles.cardDesc} numberOfLines={2}>
         {job.description}
       </Text>
- 
+
       <View style={styles.cardFooter}>
         <View style={styles.metaItem}>
           <Text style={styles.metaIcon}>📍</Text>
@@ -164,7 +239,7 @@ function JobCard({ job, onPress }) {
           <Text style={styles.metaText}>Expires in {job.expiresIn}</Text>
         </View>
       </View>
- 
+
       <View style={styles.posterRow}>
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarText}>{job.postedBy[0]}</Text>
@@ -180,6 +255,7 @@ export default function JobFeed() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [viewMode, setViewMode] = useState("list");
 
   const filtered = MOCK_JOBS.filter((job) => {
     const matchCat =
@@ -192,59 +268,54 @@ export default function JobFeed() {
     return matchCat && matchSearch;
   });
 
-  const Header = (
-    <View style={styles.headerBg}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Find a Quest</Text>
-        <TouchableOpacity
-          style={styles.postBtn}
-          onPress={() => router.push("/job/create")}
-        >
-          <Text style={styles.postText}>+ Post</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search */}
-      <SearchBar value={search} onChangeText={setSearch} />
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-      >
-        {CATEGORIES.map((cat) => (
-          <CategoryPill
-            key={cat.id}
-            label={cat.label}
-            active={activeCategory === cat.id}
-            onPress={() => setActiveCategory(cat.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <Text style={styles.results}>
-        {filtered.length} quest{filtered.length !== 1 ? "s" : ""} found
-      </Text>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.safe}>
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <JobCard
-            job={item}
-            onPress={() => router.push(`../job/${item.id}`)}
-          />
-        )}
-        ListHeaderComponent={Header}
-        stickyHeaderIndices={[0]}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={styles.headerBg}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Find a Quest</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.toggleBtn}
+              onPress={() => setViewMode(viewMode === "list" ? "map" : "list")}
+            >
+              <Text style={styles.toggleBtnText}>
+                {viewMode === "list" ? "MAP" : "LIST"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.postBtn} onPress={() => router.push("/job/create")}>
+              <Text style={styles.postText}>+ Post</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <SearchBar value={search} onChangeText={setSearch} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+          {CATEGORIES.map((cat) => (
+            <CategoryPill key={cat.id} label={cat.label} active={activeCategory === cat.id}
+              onPress={() => setActiveCategory(cat.id)} />
+          ))}
+        </ScrollView>
+        <Text style={styles.results}>
+          {filtered.length} quest{filtered.length !== 1 ? "s" : ""} found
+        </Text>
+      </View>
+
+      {viewMode === "list" ? (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <JobCard job={item} onPress={() => router.push(`../job/${item.id}`)} />
+          )}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <WebView
+          style={styles.map}
+          source={{ html: buildMapHTML(filtered) }}
+          onMessage={(e) => router.push("../job/" + e.nativeEvent.data)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -440,4 +511,15 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.xs,
         color: Colors.textMuted,
     },
+    headerActions: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+    toggleBtn: {
+        backgroundColor: Colors.surfaceRaised, paddingHorizontal: 14, paddingVertical: 6,
+        borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
+    },
+    toggleBtnText: { fontSize: 14, fontWeight: "700", color: Colors.textSecondary },
+    map: { flex: 1 },
+    callout: { width: 200, padding: 8 },
+    calloutTitle: { fontSize: 13, fontWeight: "700", color: "#111", marginBottom: 2 },
+    calloutPay: { fontSize: 13, fontWeight: "900", color: Colors.accentDim },
+    calloutBtn: { marginTop: 4, fontSize: 12, fontWeight: "700", color: Colors.accent, textDecorationLine: "underline" },
 });
