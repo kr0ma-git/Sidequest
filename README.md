@@ -24,6 +24,11 @@ Initial Commit
 - Added job list refresher (swiping down refreshes the job list)
 - Switched the mock data for debugging and testing with the actual database data
 - Made a Dockerfile for server containerization
+- Finished the sign up feature with room for improvement in the UI
+
+2026-05-04
+
+- Updated the sign up feature's validation
 
 TODO:
 

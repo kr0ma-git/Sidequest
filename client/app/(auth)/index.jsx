@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ScrollView
 } from "react-native";
 import { useRouter, Redirect } from "expo-router";
 import { AuthInput } from "../components/AuthInput";
@@ -18,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useSession } from "../lib/SessionContext.jsx";
 import SplashScreen from "../components/SplashScreen.jsx";
+import { PopUp } from "../components/PopUp.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NOTE: Auth is session-based via Supabase.
@@ -157,9 +159,10 @@ function LoginForm() {
   );
 }
 
-function RegisterForm() {
+function RegisterForm({ setActiveTab }) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -167,12 +170,19 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [visibleError, setVisibleError] = useState(false);
+  const [visibleSuccess, setVisibleSuccess] = useState(false);
 
-  function validate() {
+  async function validate() {
     const next = {};
     if (!fullName.trim()) next.fullName = "Full name is required.";
+    if (!username.trim()) next.username = "Username is required.";
     if (!email.trim()) next.email = "Email is required.";
     else if (!/\S+@\S+\.\S+/.test(email)) next.email = "Enter a valid email.";
+    else {
+      const emailExists = await checkEmail(email);
+      if (emailExists) next.email = "Email already exists";
+    }
     if (!password) next.password = "Password is required.";
     else if (password.length < 8) next.password = "Must be at least 8 characters.";
     if (!confirmPassword) next.confirmPassword = "Please confirm your password.";
@@ -181,22 +191,63 @@ function RegisterForm() {
     return Object.keys(next).length === 0;
   }
 
+  async function checkEmail(email) {
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/auth/checkEmail/${email}`);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Internal error");
+      }
+      
+      return data.exists;
+    } catch(err) {
+      setVisibleError(true);
+      setErrors({ 
+        general: err.message || "Unexpected error",
+        error: err.error
+      });
+    }
+  }
+
   async function handleRegister() {
-    if (!validate()) return;
     setLoading(true);
+
+    const isValid = await validate();
+    if (!isValid) return;
     try {
       // TODO: Uncomment when Supabase is set up
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
-      });
-      if (error) throw error;
+      // const { error } = await supabase.auth.signUp({
+      //   email,
+      //   password,
+      //   options: { data: { full_name: fullName } },
+      // });
+      // if (error) throw error;
 
-      await new Promise((r) => setTimeout(r, 1200));
-      router.replace("/(tabs)");
-    } catch (e) {
-      setErrors({ email: "An account with this email already exists." });
+      const response = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/auth/signUp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fullName, username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      if (data.success) {
+        setVisibleSuccess(true);
+      } 
+    } catch (err) {
+      setVisibleError(true);
+      setErrors({ 
+        general: err.message || "Unexpected error",
+        error: err.error
+      });
     } finally {
       setLoading(false);
     }
@@ -209,6 +260,20 @@ function RegisterForm() {
 
   return (
     <View>
+      {visibleError && (
+        <PopUp message={errors?.general || "Something went wrong"} visible={visibleError} isAlert={true} onClose={() => setVisibleError(false)} />
+      )}
+
+      {visibleSuccess && (
+        <PopUp message={"Successfully created account. Going back to login page."} visible={visibleSuccess} onClose={() => {
+          setVisibleSuccess(false);
+
+          setTimeout(() => {
+            setActiveTab("login");
+          }, 150);
+        }} />
+      )}
+
       <AuthInput
         label="Full Name"
         placeholder="Jane Dela Cruz"
@@ -216,6 +281,13 @@ function RegisterForm() {
         value={fullName}
         onChangeText={setFullName}
         error={errors.fullName}
+      />
+      <AuthInput
+        label="Username"
+        placeholder="JaneDelaCruz"
+        value={username}
+        onChangeText={setUsername}
+        error={errors.username}
       />
       <AuthInput
         label="Email"
@@ -231,6 +303,8 @@ function RegisterForm() {
         label="Password"
         placeholder="Min. 8 characters"
         secureTextEntry={!showPassword}
+        autoCapitalize="none"
+        autoCorrect={false}
         value={password}
         onChangeText={setPassword}
         error={errors.password}
@@ -241,6 +315,8 @@ function RegisterForm() {
         label="Confirm Password"
         placeholder="••••••••"
         secureTextEntry={!showConfirm}
+        autoCapitalize="none"
+        autoCorrect={false}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         error={errors.confirmPassword}
@@ -286,7 +362,11 @@ export default function AuthScreen() {
         style={{flex: 1}}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
 
           {/* Header */}
           <View style={styles.header}>
@@ -323,10 +403,10 @@ export default function AuthScreen() {
             </View>
 
             {/* Active form */}
-            {activeTab === "login" ? <LoginForm /> : <RegisterForm />}
+            {activeTab === "login" ? <LoginForm /> : <RegisterForm setActiveTab={setActiveTab} />}
 
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -338,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     justifyContent: "center",
