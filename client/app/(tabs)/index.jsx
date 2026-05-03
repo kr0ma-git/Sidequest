@@ -174,8 +174,6 @@ const CATEGORIES = [
 //   },
 // ];
 
-
-
 function SearchBar({ value, onChangeText }) {
   return (
     <View style={styles.searchContainer}>
@@ -276,22 +274,15 @@ export default function JobFeed() {
     fetchJobs();
   }, []);
 
-  // const filtered = MOCK_JOBS.filter((job) => {
-  //   const matchCat =
-  //     activeCategory === "all" || job.category === activeCategory;
-
-  //   const matchSearch =
-  //     search.trim() === "" ||
-  //     job.title.toLowerCase().includes(search.toLowerCase());
-
-  //   return matchCat && matchSearch;
-  // });
-  
   async function fetchJobs() {
     try {
       const response = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/`);
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Fetching jobs failed");
+      }
 
       if (data.success) {
         setJobs(data.jobs);

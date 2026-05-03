@@ -2,7 +2,7 @@ import supabase from "../config/supabaseConnection.js";
 
 const userSignUp = async (req, res) => {
   try {
-    const { fullName, email, password, username } = req.body;
+    const { fullName, username, email, password } = req.body;
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -10,7 +10,7 @@ const userSignUp = async (req, res) => {
 
     if (signUpError) {
       return res.status(400).json({
-        message: "Failed to sign up into Supabase",
+        message: "Failed to sign up",
         error: signUpError.message,
       });
     }
@@ -31,12 +31,14 @@ const userSignUp = async (req, res) => {
     if (profileError) {
       return res.status(400).json({
         message: "Failed to create profile",
+        success: false,
         error: profileError.message,
       });
     }
 
     return res.status(201).json({
       message: "User created successfully",
+      success: true,
       user: signUpData.user,
       profile: profileData,
     });
@@ -48,6 +50,29 @@ const userSignUp = async (req, res) => {
     });
   }
 };
+
+const checkIfExistingEmail = async (req, res) => {
+  try {
+    const { email } = req.params
+    const { data, error } = await supabase.from("profiles").select("id").eq("email", email).maybeSingle();
+
+    if (error) {
+      return res.status(400).json({
+        message: "Failed to fetch data",
+        error: error.message,
+      });
+    }
+
+    return res.status(200).json({
+      exists: !!data,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Unexpected server error",
+      error: err.message || err,
+    });
+  }
+}
 
 /* Login is done with the fronend to keep local session.
 const userLogin = async (req, res) => {
@@ -87,5 +112,7 @@ const userLogin = async (req, res) => {
 export {
     // POST
     userSignUp,
+    // GET
+    checkIfExistingEmail,
     //userLogin,
 }
