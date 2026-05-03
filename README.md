@@ -18,9 +18,14 @@ Initial Commit
 - Added user login feature (email) via supabase
 - Fixed UI bug after login where statusbar would overlap with job list page
 
+2026-05-03
+
+- Added create job posting page
+
 TODO:
 
 - Fix Google OAuth authentication
 - Create MyQuest Page
-- Create Job Creation Page
 - Create Profile Page
+- Add payment method, subtotal box in job creation page
+- connect backend to job creation page

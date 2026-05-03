@@ -282,7 +282,7 @@ export default function JobFeed() {
                 {viewMode === "list" ? "MAP" : "LIST"}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.postBtn} onPress={() => router.push("/job/create")}>
+            <TouchableOpacity style={styles.postBtn} onPress={() => router.push("../job/create")}>
               <Text style={styles.postText}>+ Post</Text>
             </TouchableOpacity>
           </View>
