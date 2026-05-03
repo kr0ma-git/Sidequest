@@ -7,7 +7,7 @@ dotenv.config({
 
 const startServer = async () => {
     try {
-        app.listen(process.env.PORT || 8080, () => {
+        app.listen(process.env.PORT || 8080, "0.0.0.0", () => {
             console.log(`Server is running on port ${process.env.PORT}`);
         })
     } catch(error) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   FlatList,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
@@ -92,86 +93,88 @@ const CATEGORIES = [
   { id: "other", label: "✨ Other" },
 ];
 
-const MOCK_JOBS = [
-  {
-    id: "1",
-    title: "Deliver groceries to Lahug",
-    category: "delivery",
-    pay: 150,
-    location: "Lahug, Cebu City",
-    coords: { latitude: 10.3310, longitude: 123.9137 },
-    description: "Need someone to pick up groceries from SM Cebu and deliver to my condo. Items are already listed and paid for via GCash.",
-    postedBy: "Maria S.",
-    postedAt: "2h ago",
-    expiresIn: "70h",
-    urgent: false,
-  },
-  {
-    id: "2",
-    title: "Fix leaking faucet in kitchen",
-    category: "repair",
-    pay: 300,
-    location: "Banilad, Cebu City",
-    coords: { latitude: 10.3500, longitude: 123.9050 },
-    description: "Kitchen faucet has been dripping for a week. Need someone with basic plumbing experience. Tools preferred but not required.",
-    postedBy: "Jun R.",
-    postedAt: "30m ago",
-    expiresIn: "71h",
-    urgent: true,
-  },
-  {
-    id: "3",
-    title: "Help move furniture to 2nd floor",
-    category: "moving",
-    pay: 500,
-    location: "IT Park, Cebu City",
-    coords: { latitude: 10.3310, longitude: 123.9053 },
-    description: "Moving a sofa, dining table, and 2 cabinets from ground floor to second floor. Need 2 strong helpers for about 2 hours.",
-    postedBy: "Carla M.",
-    postedAt: "5h ago",
-    expiresIn: "67h",
-    urgent: false,
-  },
-  {
-    id: "4",
-    title: "Math tutor for Grade 10 student",
-    category: "tutoring",
-    pay: 250,
-    location: "Talamban, Cebu City",
-    coords: { latitude: 10.3600, longitude: 123.9200 },
-    description: "My daughter needs help with Algebra and Geometry. 2-hour session this Saturday afternoon. Must be patient and explain clearly.",
-    postedBy: "Lito D.",
-    postedAt: "1h ago",
-    expiresIn: "71h",
-    urgent: false,
-  },
-  {
-    id: "5",
-    title: "Deep clean small apartment",
-    category: "cleaning",
-    pay: 400,
-    location: "Mabolo, Cebu City",
-    coords: { latitude: 10.3230, longitude: 123.9180 },
-    description: "Studio apartment needs thorough cleaning — floors, bathroom, kitchen. Around 3 hours of work. Cleaning supplies provided.",
-    postedBy: "Ana T.",
-    postedAt: "3h ago",
-    expiresIn: "69h",
-    urgent: true,
-  },
-  {
-    id: "6",
-    title: "Pick up documents from City Hall",
-    category: "errands",
-    pay: 120,
-    location: "Downtown, Cebu City",
-    coords: { latitude: 10.2939, longitude: 123.9020 },
-    description: "Need someone to queue and pick up barangay clearance and cedula from City Hall. Will provide authorization letter.",
-    postedBy: "Renz P.",
-    postedAt: "4h ago",
-    expiresIn: "68h",
-    urgent: false,
-  },
-];
+// const MOCK_JOBS = [
+//   {
+//     id: "1",
+//     title: "Deliver groceries to Lahug",
+//     category: "delivery",
+//     pay: 150,
+//     location: "Lahug, Cebu City",
+//     coords: { latitude: 10.3310, longitude: 123.9137 },
+//     description: "Need someone to pick up groceries from SM Cebu and deliver to my condo. Items are already listed and paid for via GCash.",
+//     postedBy: "Maria S.",
+//     postedAt: "2h ago",
+//     expiresIn: "70h",
+//     urgent: false,
+//   },
+//   {
+//     id: "2",
+//     title: "Fix leaking faucet in kitchen",
+//     category: "repair",
+//     pay: 300,
+//     location: "Banilad, Cebu City",
+//     coords: { latitude: 10.3500, longitude: 123.9050 },
+//     description: "Kitchen faucet has been dripping for a week. Need someone with basic plumbing experience. Tools preferred but not required.",
+//     postedBy: "Jun R.",
+//     postedAt: "30m ago",
+//     expiresIn: "71h",
+//     urgent: true,
+//   },
+//   {
+//     id: "3",
+//     title: "Help move furniture to 2nd floor",
+//     category: "moving",
+//     pay: 500,
+//     location: "IT Park, Cebu City",
+//     coords: { latitude: 10.3310, longitude: 123.9053 },
+//     description: "Moving a sofa, dining table, and 2 cabinets from ground floor to second floor. Need 2 strong helpers for about 2 hours.",
+//     postedBy: "Carla M.",
+//     postedAt: "5h ago",
+//     expiresIn: "67h",
+//     urgent: false,
+//   },
+//   {
+//     id: "4",
+//     title: "Math tutor for Grade 10 student",
+//     category: "tutoring",
+//     pay: 250,
+//     location: "Talamban, Cebu City",
+//     coords: { latitude: 10.3600, longitude: 123.9200 },
+//     description: "My daughter needs help with Algebra and Geometry. 2-hour session this Saturday afternoon. Must be patient and explain clearly.",
+//     postedBy: "Lito D.",
+//     postedAt: "1h ago",
+//     expiresIn: "71h",
+//     urgent: false,
+//   },
+//   {
+//     id: "5",
+//     title: "Deep clean small apartment",
+//     category: "cleaning",
+//     pay: 400,
+//     location: "Mabolo, Cebu City",
+//     coords: { latitude: 10.3230, longitude: 123.9180 },
+//     description: "Studio apartment needs thorough cleaning — floors, bathroom, kitchen. Around 3 hours of work. Cleaning supplies provided.",
+//     postedBy: "Ana T.",
+//     postedAt: "3h ago",
+//     expiresIn: "69h",
+//     urgent: true,
+//   },
+//   {
+//     id: "6",
+//     title: "Pick up documents from City Hall",
+//     category: "errands",
+//     pay: 120,
+//     location: "Downtown, Cebu City",
+//     coords: { latitude: 10.2939, longitude: 123.9020 },
+//     description: "Need someone to queue and pick up barangay clearance and cedula from City Hall. Will provide authorization letter.",
+//     postedBy: "Renz P.",
+//     postedAt: "4h ago",
+//     expiresIn: "68h",
+//     urgent: false,
+//   },
+// ];
+
+
 
 function SearchBar({ value, onChangeText }) {
   return (
@@ -251,22 +254,73 @@ function JobCard({ job, onPress }) {
   );
 }
 
+
+
 export default function JobFeed() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [viewMode, setViewMode] = useState("list");
+  const [refreshing, setRefreshing] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const filtered = jobs.filter((job) => {
+    const matchCat = activeCategory === "all" || job.category === activeCategory;
 
-  const filtered = MOCK_JOBS.filter((job) => {
-    const matchCat =
-      activeCategory === "all" || job.category === activeCategory;
-
-    const matchSearch =
-      search.trim() === "" ||
-      job.title.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = search.trim() === "" || job.title.toLowerCase().includes(search.toLowerCase());
 
     return matchCat && matchSearch;
   });
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // const filtered = MOCK_JOBS.filter((job) => {
+  //   const matchCat =
+  //     activeCategory === "all" || job.category === activeCategory;
+
+  //   const matchSearch =
+  //     search.trim() === "" ||
+  //     job.title.toLowerCase().includes(search.toLowerCase());
+
+  //   return matchCat && matchSearch;
+  // });
+  
+  async function fetchJobs() {
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/`);
+
+      const data = await response.json();
+
+      if (data.success) {
+        setJobs(data.jobs);
+      }
+    } catch(err) {
+      console.log("Fetch jobs error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+
+    try {
+      // Refresh data via api here
+      await fetchJobs();
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading quests...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.safe}>
@@ -308,6 +362,15 @@ export default function JobFeed() {
           )}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={Colors.accent}
+              colors={[Colors.accent]}
+              progressViewOffset={0}
+            />
+          }
         />
       ) : (
         <WebView
@@ -522,4 +585,15 @@ const styles = StyleSheet.create({
     calloutTitle: { fontSize: 13, fontWeight: "700", color: "#111", marginBottom: 2 },
     calloutPay: { fontSize: 13, fontWeight: "900", color: Colors.accentDim },
     calloutBtn: { marginTop: 4, fontSize: 12, fontWeight: "700", color: Colors.accent, textDecorationLine: "underline" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+  },
+  loadingText: {
+    fontSize: FontSizes.md,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+  }
 });
