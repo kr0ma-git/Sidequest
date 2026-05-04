@@ -32,11 +32,14 @@ Initial Commit
 - Added payment method and subtotal box on job creation page
 - Added job creation endpoint in the backend
 
+2026-05-05
+
+- Static profile page finished
+
 TODO:
 
 - Fix Google OAuth authentication
 - Create MyQuest Page
-- Create Profile Page
 
 ## NOTE
 
