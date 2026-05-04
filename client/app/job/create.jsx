@@ -18,6 +18,8 @@ import { useRouter } from 'expo-router';
 
 
 export default function create(){
+    const router = useRouter();
+    
     const [isChecked, setChecked] = useState(false);
     const [jobLocation, setJobLocation] = useState(null);
     const [jobTitle, setJobTitle] = useState("");
@@ -26,7 +28,9 @@ export default function create(){
     const [paymentMethod, setPaymentMethod] = useState('gcash'); // default to gcash
     const [isModalVisible, setIsModalVisible] = useState(false)
 
-    const router = useRouter();
+    const baseReward = parseFloat(jobReward) || 0;
+    const urgentFee = isChecked ? 50 : 0;
+    const totalAmount = baseReward + urgentFee;
     
     const urgentCheck = (newValue) => {
         setChecked(newValue);
@@ -158,6 +162,29 @@ export default function create(){
                         <Text style={styles.urgentDesc}>
                             Highlight and prioritize this job in search results
                         </Text>
+                    </View>
+                </View>
+
+                <View style={styles.subtotalContainer}>
+                    <Text style={styles.subtotalTitle}>Payment Summary</Text>
+                    
+                    <View style={styles.subtotalRow}>
+                        <Text style={styles.subtotalLabel}>Base Reward</Text>
+                        <Text style={styles.subtotalValue}>₱{baseReward.toFixed(2)}</Text>
+                    </View>
+
+                    {isChecked && (
+                        <View style={styles.subtotalRow}>
+                            <Text style={styles.subtotalLabel}>Urgent Fee</Text>
+                            <Text style={styles.subtotalValue}>₱50.00</Text>
+                        </View>
+                    )}
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.totalRow}>
+                        <Text style={styles.totalLabel}>Total Estimate</Text>
+                        <Text style={styles.totalValue}>₱{totalAmount.toFixed(2)}</Text>
                     </View>
                 </View>
 
@@ -361,6 +388,56 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.md,
         fontWeight: "800",
         letterSpacing: 0.5,
+    },
+    subtotalContainer: {
+        backgroundColor: Colors.surface,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        borderRadius: Radius.lg,
+        padding: Spacing.md,
+        marginTop: Spacing.sm,
+        gap: Spacing.sm,
+    },
+    subtotalTitle: {
+        fontSize: FontSizes.sm,
+        fontWeight: "700",
+        color: Colors.textPrimary,
+        marginBottom: 4,
+    },
+    subtotalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    subtotalLabel: {
+        fontSize: FontSizes.sm,
+        color: Colors.textSecondary,
+    },
+    subtotalValue: {
+        fontSize: FontSizes.sm,
+        color: Colors.textPrimary,
+        fontWeight: "500",
+    },
+    divider: {
+        height: 1,
+        backgroundColor: Colors.border,
+        marginVertical: Spacing.xs,
+    },
+    totalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 2,
+    },
+    totalLabel: {
+        fontSize: FontSizes.md,
+        fontWeight: "800",
+        color: Colors.textPrimary,
+    },
+    totalValue: {
+        fontSize: FontSizes.lg,
+        fontWeight: "800",
+        color: Colors.accent, 
     },
 });
 
