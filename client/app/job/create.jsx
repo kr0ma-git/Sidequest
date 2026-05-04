@@ -14,7 +14,7 @@ import Checkbox from "expo-checkbox";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
 import LeafletLocationPicker from '../components/LeafletMap';
 import { useRouter } from 'expo-router';
-
+import { useSession } from "../lib/SessionContext.jsx";
 
 
 export default function create(){

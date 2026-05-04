@@ -30,13 +30,13 @@ Initial Commit
 
 - Updated the sign up feature's validation
 - Added payment method and subtotal box on job creation page
+- Added job creation endpoint in the backend
 
 TODO:
 
 - Fix Google OAuth authentication
 - Create MyQuest Page
 - Create Profile Page
-- connect backend to job creation page
 
 ## NOTE
 
