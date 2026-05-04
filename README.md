@@ -29,13 +29,13 @@ Initial Commit
 2026-05-04
 
 - Updated the sign up feature's validation
+- Added payment method and subtotal box on job creation page
 
 TODO:
 
 - Fix Google OAuth authentication
 - Create MyQuest Page
 - Create Profile Page
-- Add payment method, subtotal box in job creation page
 - connect backend to job creation page
 
 ## NOTE
