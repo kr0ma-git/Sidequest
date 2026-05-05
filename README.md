@@ -39,6 +39,8 @@ Initial Commit
 - Added AsyncStorage to createClient in supabaseConnection in the client-side to facilitate refresh tokens
 - Added pop up error message in index to check if there is an error in connecting to the server
 - Updated fetching of jobs to include only jobs that are not taken
+- Added myQuests page
+- Fixed loading screen UI on index
 
 TODO:
 
@@ -46,6 +48,7 @@ TODO:
 - Create MyQuest Page
 - Add token to each client-side request to the server (fetch) to verify that such requests were made from the actual client and were not tampered with (NOTE: only implement after each endpoint has been created and tested since Postman will no longer work after this addition)
 - Test job creation and then merge with main
+- Make endpoints related to myQuests page (fetchPosted, fetchAccepted)
 
 ## NOTE
 
