@@ -31,15 +31,21 @@ Initial Commit
 - Updated the sign up feature's validation
 - Added payment method and subtotal box on job creation page
 - Added job creation endpoint in the backend
+- Added taken_by column in the jobs table
 
 2026-05-05
 
 - Static profile page finished
+- Added AsyncStorage to createClient in supabaseConnection in the client-side to facilitate refresh tokens
+- Added pop up error message in index to check if there is an error in connecting to the server
+- Updated fetching of jobs to include only jobs that are not taken
 
 TODO:
 
 - Fix Google OAuth authentication
 - Create MyQuest Page
+- Add token to each client-side request to the server (fetch) to verify that such requests were made from the actual client and were not tampered with (NOTE: only implement after each endpoint has been created and tested since Postman will no longer work after this addition)
+- Test job creation and then merge with main
 
 ## NOTE
 

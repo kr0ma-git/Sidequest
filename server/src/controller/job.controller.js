@@ -23,10 +23,10 @@ const fetchAllJobs = async (req, res) => {
   try {
     const { data, error } = await supabase.from("jobs").select(`
       *,
-      profiles (
-        full_name
-      )
-    `).order("created_at", { ascending: false });
+      poster:profiles!jobs_posted_by_fkey(full_name)
+    `)
+    .eq("job_taken", false)
+    .order("created_at", { ascending: false });
 
     if (error) {
       return res.status(400).json({

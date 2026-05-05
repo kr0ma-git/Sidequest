@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
 import { WebView } from "react-native-webview";
+import { PopUp } from "../components/PopUp.jsx";
 
 // FIXED: Replaced duplicate string-concatenation functions with a single, clean Template Literal.
 function buildMapHTML(jobs) {
@@ -252,8 +253,6 @@ function JobCard({ job, onPress }) {
   );
 }
 
-
-
 export default function JobFeed() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -261,7 +260,9 @@ export default function JobFeed() {
   const [viewMode, setViewMode] = useState("list");
   const [refreshing, setRefreshing] = useState(false);
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [jobError, setJobError] = useState(true);
+  const [alertToggle, setAlertToggle] = useState(true);
   const filtered = jobs.filter((job) => {
     const matchCat = activeCategory === "all" || job.category === activeCategory;
 
@@ -286,9 +287,12 @@ export default function JobFeed() {
 
       if (data.success) {
         setJobs(data.jobs);
+        setJobError(false);
       }
     } catch(err) {
       console.log("Fetch jobs error:", err);
+      setJobError(true);
+      setAlertToggle(true);
     } finally {
       setLoading(false);
     }
@@ -343,6 +347,10 @@ export default function JobFeed() {
           {filtered.length} quest{filtered.length !== 1 ? "s" : ""} found
         </Text>
       </View>
+
+      {jobError && (
+        <PopUp message={"Fetching jobs error (500)"} visible={alertToggle} isAlert={true} onClose={() => setAlertToggle(false)} />
+      )}
 
       {viewMode === "list" ? (
         <FlatList
