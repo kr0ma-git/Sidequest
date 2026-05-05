@@ -9,6 +9,7 @@ import {
   FlatList,
   ScrollView,
   RefreshControl,
+  ActivityIndicator
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
@@ -311,8 +312,9 @@ export default function JobFeed() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading quests...</Text>
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator color={Colors.accent} size="large" />
+        <Text style={styles.loadingText}>Loading Sidequest…</Text>
       </View>
     );
   }
@@ -321,7 +323,7 @@ export default function JobFeed() {
     <View style={styles.safe}>
       <View style={styles.headerBg}>
         <View style={styles.header}>
-          <Text style={styles.title}>Find a Quest</Text>
+          <Text style={styles.title}>Sidequest</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.toggleBtn}
@@ -594,5 +596,17 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.md,
     color: Colors.textSecondary,
     fontWeight: "600",
-  }
+  },
+  loadingWrap: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.md,
+  },
+  loadingText: {
+    fontSize: FontSizes.sm,
+    color: Colors.textMuted,
+    fontWeight: "600",
+  },
 });
