@@ -42,10 +42,13 @@ Initial Commit
 - Added myQuests page
 - Fixed loading screen UI on index
 
+2026-05-07
+
+- Added endpoints for the myQuests page
+
 TODO:
 
 - Fix Google OAuth authentication
-- Create MyQuest Page
 - Add token to each client-side request to the server (fetch) to verify that such requests were made from the actual client and were not tampered with (NOTE: only implement after each endpoint has been created and tested since Postman will no longer work after this addition)
 - Test job creation and then merge with main
 - Make endpoints related to myQuests page (fetchPosted, fetchAccepted)

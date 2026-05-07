@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, FontSizes, Spacing, Radius } from "../constants/theme";
 import { supabase } from "../config/supabaseConnection.js";
+import { useSession } from "../lib/SessionContext.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API shape expected from Express:
@@ -46,24 +47,24 @@ const STATUS_CONFIG = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatExpiry(expireTimestamp) {
-  if (!expireTimestamp) return "—";
-  const diff = new Date(expireTimestamp) - new Date();
-  if (diff <= 0) return "Expired";
-  const h = Math.floor(diff / 3600000);
-  if (h < 24) return `${h}h left`;
-  return `${Math.floor(h / 24)}d left`;
-}
+// function formatExpiry(expireTimestamp) {
+//   if (!expireTimestamp) return "—";
+//   const diff = new Date(expireTimestamp) - new Date();
+//   if (diff <= 0) return "Expired";
+//   const h = Math.floor(diff / 3600000);
+//   if (h < 24) return `${h}h left`;
+//   return `${Math.floor(h / 24)}d left`;
+// }
 
-function formatPostedAt(createdAt) {
-  if (!createdAt) return "—";
-  const diff = Date.now() - new Date(createdAt);
-  const m = Math.floor(diff / 60000);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
+// function formatPostedAt(createdAt) {
+//   if (!createdAt) return "—";
+//   const diff = Date.now() - new Date(createdAt);
+//   const m = Math.floor(diff / 60000);
+//   if (m < 60) return `${m}m ago`;
+//   const h = Math.floor(m / 60);
+//   if (h < 24) return `${h}h ago`;
+//   return `${Math.floor(h / 24)}d ago`;
+// }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ function StatusBadge({ status }) {
 
 // Card for jobs the user posted
 function PostedCard({ job, onPress }) {
-  const takenBy = job.taken_by;
+  const takenBy = job.takenBy;
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.card}>
       {/* Title + status */}
@@ -89,7 +90,7 @@ function PostedCard({ job, onPress }) {
               <Text style={styles.urgentText}>URGENT</Text>
             </View>
           )}
-          <Text style={styles.cardTitle} numberOfLines={2}>{job.job_title}</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>{job.title}</Text>
         </View>
         <StatusBadge status={job.status} />
       </View>
@@ -110,7 +111,7 @@ function PostedCard({ job, onPress }) {
         </View>
         <View style={styles.metaItem}>
           <Ionicons name="hourglass-outline" size={12} color={Colors.textMuted} />
-          <Text style={styles.metaText}>{formatExpiry(job.expire)}</Text>
+          <Text style={styles.metaText}>{job.expiresIn}</Text>
         </View>
       </View>
 
@@ -119,7 +120,7 @@ function PostedCard({ job, onPress }) {
         {takenBy ? (
           <View style={styles.takenRow}>
             <Ionicons name="person-circle-outline" size={14} color={Colors.accent} />
-            <Text style={styles.takenText}>Accepted by someone</Text>
+            <Text style={styles.takenText}>Accepted by {job.takenBy}</Text>
           </View>
         ) : (
           <View style={styles.takenRow}>
@@ -127,7 +128,7 @@ function PostedCard({ job, onPress }) {
             <Text style={styles.waitingText}>Waiting for a taker</Text>
           </View>
         )}
-        <Text style={styles.postedAt}>{formatPostedAt(job.created_at)}</Text>
+        <Text style={styles.postedAt}>{job.postedAt}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -145,7 +146,7 @@ function AcceptedCard({ job, onPress }) {
               <Text style={styles.urgentText}>URGENT</Text>
             </View>
           )}
-          <Text style={styles.cardTitle} numberOfLines={2}>{job.job_title}</Text>
+          <Text style={styles.cardTitle} numberOfLines={2}>{job.title}</Text>
         </View>
         <StatusBadge status={job.status} />
       </View>
@@ -166,7 +167,7 @@ function AcceptedCard({ job, onPress }) {
         </View>
         <View style={styles.metaItem}>
           <Ionicons name="hourglass-outline" size={12} color={Colors.textMuted} />
-          <Text style={styles.metaText}>{formatExpiry(job.expire)}</Text>
+          <Text style={styles.metaText}>{job.expiresIn}</Text>
         </View>
       </View>
 
@@ -174,9 +175,9 @@ function AcceptedCard({ job, onPress }) {
       <View style={styles.cardFooter}>
         <View style={styles.takenRow}>
           <Ionicons name="person-outline" size={14} color={Colors.textMuted} />
-          <Text style={styles.waitingText}>Posted by someone</Text>
+          <Text style={styles.waitingText}>Posted by {job.postedBy}</Text>
         </View>
-        <Text style={styles.postedAt}>{formatPostedAt(job.created_at)}</Text>
+        <Text style={styles.postedAt}>{formatPostedAt(job.postedAt)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -210,17 +211,18 @@ export default function MyQuests() {
   const [activeTab, setActiveTab] = useState("posted");
   const [postedJobs, setPostedJobs] = useState([]);
   const [acceptedJobs, setAcceptedJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingScreen, setLoadingScreen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { session, loading } = useSession();
 
   useEffect(() => {
     loadAll();
   }, []);
 
   async function loadAll() {
-    setLoading(true);
+    setLoadingScreen(true);
     await Promise.all([fetchPosted(), fetchAccepted()]);
-    setLoading(false);
+    setLoadingScreen(false);
   }
 
   async function fetchPosted() {
@@ -228,7 +230,7 @@ export default function MyQuests() {
       // TODO: attach auth header once session tokens are wired up
       // const { data: { session } } = await supabase.auth.getSession();
       // headers: { Authorization: `Bearer ${session.access_token}` }
-      const res = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/posted`);
+      const res = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/posted/${session.user.id}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       if (data.success) setPostedJobs(data.jobs);
@@ -239,7 +241,7 @@ export default function MyQuests() {
 
   async function fetchAccepted() {
     try {
-      const res = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/accepted`);
+      const res = await fetch(`${process.env.EXPO_PUBLIC_LOCAL_URI}/api/v1/jobs/accepted/${session.user.id}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       if (data.success) setAcceptedJobs(data.jobs);
@@ -256,7 +258,7 @@ export default function MyQuests() {
 
   const currentData = activeTab === "posted" ? postedJobs : acceptedJobs;
 
-  if (loading) {
+  if (loadingScreen) {
     return (
       <View style={styles.loadingWrap}>
         <ActivityIndicator color={Colors.accent} size="large" />

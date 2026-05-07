@@ -99,6 +99,105 @@ const createJob = async (req, res) => {
   }
 }
 
+const fetchPostedByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { data, error } = await supabase.from("jobs").select(`
+      *,
+      poster:profiles!jobs_posted_by_fkey(full_name) 
+    `)
+    .eq("posted_by", userId)
+    .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(400).json({
+        message: "Failed to fetch jobs",
+        error: error.message,
+      });
+    }
+
+    const formattedJobs = data.map((job) => ({
+      id: String(job.id),
+      title: job.job_title,
+      category: job.category,
+      pay: Number(job.pay),
+      location: job.location.address,
+      coords: {
+        latitude: job.location.latitude,
+        longitude: job.location.longitude,
+      },
+      description: job.description,
+      postedBy: job.poster?.full_name ?? "Anonymous",
+      postedAt: formatHoursAgo(job.created_at),
+      expiresIn: formatExpiresIn(job.expire),
+      urgent: job.urgent,
+      takenBy: job.taken_by,
+      status: job.status,
+    }));
+
+    return res.status(200).json({
+      message: "All posted jobs fetched",
+      success: true,
+      jobs: formattedJobs,
+    })
+
+  } catch(err) {
+    return res.status(500).json({
+      message: "Unexpected server error",
+      error: err.message || err,
+    });
+  }
+}
+
+const fetchAcceptedByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { data, error } = await supabase.from("jobs").select(`
+      *,
+      accepted:profiles!jobs_taken_by_fkey(full_name)
+    `)
+    .eq("taken_by", userId)
+    .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(400).json({
+        message: "Failed to fetch jobs",
+        error: error.message,
+      });
+    }
+
+    const formattedJobs = data.map((job) => ({
+      id: String(job.id),
+      title: job.job_title,
+      category: job.category,
+      pay: Number(job.pay),
+      location: job.location.address,
+      coords: {
+        latitude: job.location.latitude,
+        longitude: job.location.longitude,
+      },
+      description: job.description,
+      postedBy: job.accepted?.full_name ?? "Anonymous",
+      postedAt: formatHoursAgo(job.created_at),
+      expiresIn: formatExpiresIn(job.expire),
+      urgent: job.urgent,
+      takenBy: job.taken_by,
+      status: job.status,
+    }));
+
+    return res.status(200).json({
+      message: "All taken jobs fetched",
+      success: true,
+      jobs: formattedJobs,
+    })
+  } catch(err) {
+    return res.status(500).json({
+      message: "Unexpected server error",
+      error: err.message || err,
+    });
+  }
+}
+
 /*
 
 try {
@@ -118,4 +217,6 @@ export {
     fetchAllJobs,
     // POST
     createJob,
+    fetchPostedByUser,
+    fetchAcceptedByUser,
 }
